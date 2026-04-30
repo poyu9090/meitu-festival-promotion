@@ -36,6 +36,7 @@ model Activity {
   badgeCopyEn     String?
   badgeCopyLocal  String?
   status          String             @default("未配置")
+  notified        Boolean            @default(false)
   product         String             @default("美图秀秀")
   markets    ActivityOnMarket[]
   images     ActivityImage[]

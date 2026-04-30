@@ -195,9 +195,7 @@ function ExpandedDetail({ activity }: { activity: Activity }) {
     if (marketCodes.length === 0) return
 
     const startDate = activity.startDate.slice(0, 10)
-    const endRaw = new Date(activity.endDate.slice(0, 10) + 'T00:00:00')
-    endRaw.setDate(endRaw.getDate() - 1)
-    const endDate = endRaw.toISOString().slice(0, 10)
+    const endDate = activity.endDate.slice(0, 10)
 
     // Same period one week prior
     const prevStart = shiftDays(startDate, -7)
@@ -421,6 +419,7 @@ export default function ActivitiesPage() {
     ]).then(([acts, mkts]) => {
       setActivities(acts)
       setMarkets(mkts)
+      setNotifiedIds(new Set((acts as Activity[]).filter((a) => a.notified).map((a) => a.id)))
       setLoading(false)
     })
   }, [product])
@@ -462,6 +461,11 @@ export default function ActivitiesPage() {
     const res = await fetch(`/api/activities/${notifyActivity.id}/notify`, { method: 'POST' })
     if (res.ok) {
       setNotifiedIds((prev) => new Set(prev).add(notifyActivity.id))
+      fetch(`/api/activities/${notifyActivity.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notified: true }),
+      })
       setSuccessToast(`已成功寄出「${notifyActivity.name}」的通知信件`)
       setTimeout(() => setSuccessToast(null), 4000)
     } else {
@@ -588,6 +592,24 @@ export default function ActivitiesPage() {
             <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </select>
+
+        <div style={{ marginLeft: 'auto' }}>
+          <a
+            href={`/api/export?product=${encodeURIComponent(product)}${filterMarket ? `&marketId=${filterMarket}` : ''}${cutoff ? `&since=${cutoff.toISOString()}` : ''}`}
+            download
+            style={{
+              fontSize: '12px', fontWeight: 600,
+              color: 'var(--text-2)',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--surface)',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              textDecoration: 'none',
+            }}
+          >
+            汇出 Excel
+          </a>
+        </div>
       </div>
 
       {/* Table */}

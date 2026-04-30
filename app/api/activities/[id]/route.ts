@@ -21,7 +21,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params
   const body = await req.json()
   // Only allow safe scalar fields via PATCH
-  const allowed = ['status', 'notes', 'labels', 'pageOnePager', 'pageCollectOld', 'pageCollectNew', 'badgeCopyEn', 'badgeCopyLocal']
+  const allowed = ['status', 'notified', 'notes', 'labels', 'pageOnePager', 'pageCollectOld', 'pageCollectNew', 'badgeCopyEn', 'badgeCopyLocal']
   const data = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)))
   try {
     const activity = await prisma.activity.update({

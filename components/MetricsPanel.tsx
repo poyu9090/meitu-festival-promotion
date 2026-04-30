@@ -119,7 +119,7 @@ export default function MetricsPanel({ activity, onUpdate }: Props) {
             color: 'var(--text-3)',
             fontSize: '12px',
           }}>
-            尚未填入数据成效
+            尚无相关数据
           </div>
         )
       ) : (

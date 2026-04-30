@@ -27,6 +27,7 @@ export type ActivityMetric = {
 
 export type Activity = {
   id: number
+  product: string
   name: string
   startDate: string
   endDate: string
@@ -40,6 +41,7 @@ export type Activity = {
   badgeCopyEn: string | null
   badgeCopyLocal: string | null
   status: string
+  notified: boolean
   markets: { activity: Activity; activityId: number; market: Market; marketId: number }[]
   images: ActivityImage[]
   metrics: ActivityMetric[]

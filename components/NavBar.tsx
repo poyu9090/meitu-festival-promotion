@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from './ThemeProvider'
 import { useProduct, type Product } from './ProductProvider'
@@ -46,6 +46,7 @@ function SunIcon() {
 
 export default function NavBar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { theme, toggle } = useTheme()
   const { product, setProduct, products } = useProduct()
   const [open, setOpen] = useState(false)
@@ -145,7 +146,7 @@ export default function NavBar() {
                 {products.map((p) => (
                   <button
                     key={p}
-                    onClick={() => { setProduct(p as Product); setOpen(false) }}
+                    onClick={() => { setProduct(p as Product); setOpen(false); router.push('/') }}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
                       width: '100%', padding: '7px 10px',
@@ -173,35 +174,6 @@ export default function NavBar() {
           )}
         </div>
 
-        {/* Theme toggle */}
-        <button
-          onClick={toggle}
-          title={theme === 'dark' ? '切换浅色' : '切换深色'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '30px',
-            height: '30px',
-            borderRadius: '7px',
-            border: '1px solid var(--border-strong)',
-            background: 'transparent',
-            color: 'var(--text-2)',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-            flexShrink: 0,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--surface-2)'
-            e.currentTarget.style.color = 'var(--text-1)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'var(--text-2)'
-          }}
-        >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </button>
 
         {/* CTA */}
         <Link href="/activities/new" style={{

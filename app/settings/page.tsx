@@ -3,6 +3,96 @@
 import { useState } from 'react'
 import { useProduct } from '@/components/ProductProvider'
 
+
+function DangerRow({ label, confirm: confirmMsg, url, loading, setLoading, result, setResult }: {
+  label: string
+  confirm: string
+  url: string
+  loading: string | null
+  setLoading: (v: string | null) => void
+  result: Record<string, string>
+  setResult: (v: Record<string, string>) => void
+}) {
+  const isMe = loading === label
+  const handleClick = async () => {
+    if (!window.confirm(confirmMsg)) return
+    setLoading(label)
+    setResult({ ...result, [label]: '' })
+    const res = await fetch(url, { method: 'DELETE' }).then((r) => r.json())
+    setResult({ ...result, [label]: 'error' in res ? `✗ ${res.error}` : '✓ 已清除' })
+    setLoading(null)
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <button
+        onClick={handleClick}
+        disabled={loading !== null}
+        style={{
+          fontSize: '12px', fontWeight: 600,
+          background: 'var(--surface)', color: '#EF4444',
+          border: '1px solid #EF4444',
+          borderRadius: '6px', padding: '7px 14px',
+          cursor: loading !== null ? 'not-allowed' : 'pointer',
+          opacity: loading !== null ? 0.5 : 1,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {isMe ? '清除中...' : label}
+      </button>
+      {result[label] && (
+        <span style={{ fontSize: '12px', color: result[label].startsWith('✓') ? 'var(--success)' : 'var(--danger)' }}>
+          {result[label]}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function DangerSection({ product }: { product: string }) {
+  const [loading, setLoading] = useState<string | null>(null)
+  const [result, setResult] = useState<Record<string, string>>({})
+
+  const rows = [
+    {
+      label: `清除「${product}」活动资料`,
+      confirm: `确定要清除「${product}」的所有活动吗？此操作不可复原。`,
+      url: `/api/clear?type=activities&product=${encodeURIComponent(product)}`,
+    },
+    {
+      label: '清除 DAU 数据',
+      confirm: '确定要清除所有 DAU 数据吗？此操作不可复原。',
+      url: '/api/clear?type=dau',
+    },
+    {
+      label: '清除新增会员数据',
+      confirm: '确定要清除所有新增会员数据吗？此操作不可复原。',
+      url: '/api/clear?type=new_members',
+    },
+  ]
+
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid #EF4444',
+      borderRadius: '10px',
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '14px',
+    }}>
+      <div>
+        <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#EF4444', margin: 0 }}>危险区域</h2>
+        <p style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '4px', lineHeight: 1.6 }}>
+          分别清除各类资料，用于重新汇入测试。操作不可复原。
+        </p>
+      </div>
+      {rows.map((r) => (
+        <DangerRow key={r.label} {...r} loading={loading} setLoading={setLoading} result={result} setResult={setResult} />
+      ))}
+    </div>
+  )
+}
+
 function ImportSection({
   title,
   description,
@@ -152,6 +242,9 @@ export default function SettingsPage() {
         description="上传「新增会员含试用」Excel，汇入各市场每日新增会员数据。活动展开时将显示活动期间的新增会员合计。"
         onImport={importNewMembers}
       />
+
+      {/* Danger zone */}
+      <DangerSection product={product} />
     </div>
   )
 }

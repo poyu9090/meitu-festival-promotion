@@ -145,12 +145,11 @@ export async function POST(req: Request) {
     if (startDate.getFullYear() < 2025 || startDate.getFullYear() > 2026) continue
 
     // End date is in the immediately following empty-name row's date column (inclusive last day).
-    // Store as exclusive (add 1 day) to match the calendar convention.
     const nextRow = rows[i + 1] as (string | number)[] | undefined
     const rawEndSerial = typeof nextRow?.[startIdx] === 'number' ? nextRow[startIdx] as number : null
     const endDate = rawEndSerial && rawEndSerial >= rawStart
-      ? new Date(excelDateToJSDate(rawEndSerial).getTime() + 86400_000)
-      : new Date(startDate.getTime() + 7 * 86400_000)
+      ? excelDateToJSDate(rawEndSerial)
+      : new Date(startDate.getTime() + 6 * 86400_000)
 
     toImport.push({
       name,
@@ -172,16 +171,23 @@ export async function POST(req: Request) {
   const { _max } = await prisma.activity.aggregate({ _max: { id: true } })
   const prevMaxId = _max.id ?? 0
 
+  const now = new Date()
+
   // Step 2: bulk-create activities
   await prisma.activity.createMany({
-    data: toImport.map((d) => ({
-      name: d.name, startDate: d.startDate, endDate: d.endDate,
-      plan: d.plan, priceLevel: d.priceLevel, labels: '[]',
-      notes: d.notes, pageOnePager: d.pageOnePager,
-      pageCollectOld: d.pageCollectOld, pageCollectNew: d.pageCollectNew,
-      badgeCopyEn: d.badgeCopyEn, badgeCopyLocal: d.badgeCopyLocal,
-      product,
-    })),
+    data: toImport.map((d) => {
+      const hasStarted = d.startDate <= now
+      return {
+        name: d.name, startDate: d.startDate, endDate: d.endDate,
+        plan: d.plan, priceLevel: d.priceLevel, labels: '[]',
+        notes: d.notes, pageOnePager: d.pageOnePager,
+        pageCollectOld: d.pageCollectOld, pageCollectNew: d.pageCollectNew,
+        badgeCopyEn: d.badgeCopyEn, badgeCopyLocal: d.badgeCopyLocal,
+        product,
+        status: hasStarted ? '已配置' : '未配置',
+        notified: hasStarted,
+      }
+    }),
   })
 
   // Step 3: fetch ONLY the newly created rows (id > prevMaxId, same product, in insert order)
